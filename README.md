@@ -11,7 +11,9 @@ https://learn.microsoft.com/it-it/cli/azure/authenticate-azure-cli-interactively
 # Installazione Terraform
 https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli
 
-# Provisioning su Azure con Terraform
+# STEP 1 - Provisioning su Azure con Terraform
+
+Si è scelto di utilizzare terraform come tool di provisioning per le VM in quanto verrà utilizzato anche in seguito per il provisioning del cluster Kubernetes.
 
 https://learn.microsoft.com/it-it/azure/virtual-machines/linux/quick-create-terraform?tabs=azure-cli
 

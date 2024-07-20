@@ -10,7 +10,6 @@ variable "location" {
   default     = "West Europe"
 }
 
-
 variable "vnet_name" {
   description = "Nome della VNET"
   type        = string
@@ -43,18 +42,42 @@ variable "nic_name" {
 }
 
 variable "vm_name" {
-  description = "Hostname della macchina virtuale nodo Master"
+  description = "Hostname della macchina virtuale del nodo"
   type        = string
-  default     = "azure-k8-master"
+  default     = "azure-k8-node"
 }
 
-variable "vm_master_user" {
-  description = "Username della VM Master."
+variable "vm_admin_user" {
+  description = "Username della VM."
   type        = string
 }
 
-variable "vm_master_password" {
-  description = "Password dell'utente VM master."
+variable "vm_admin_password" {
+  description = "Password dell'utente VM."
   type        = string
   sensitive   = true
+}
+
+variable "vm_size" {
+  description = "Tipo di VM da creare"
+  type        = string
+  default     = "Standard_B1s"
+}
+
+variable "vm_total_count" {
+  description = "Numero totale di macchine virtuali da creare"
+  type        = number
+  default     = 3
+}
+
+variable "master_count" {
+  description = "Numero di macchine virtuali, tipo di nodo MASTER, da creare"
+  type        = number
+  default     = 1
+}
+
+variable "worker_count" {
+  description = "Numero di macchine virtuali, tipo di nodo WORKER, da creare"
+  type        = number
+  default     = 2
 }
