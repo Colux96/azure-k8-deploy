@@ -15,16 +15,15 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    - uses: terraform-linters/setup-tflint@v3
-      name: Setup TFLint
-      with:
-        tflint_version: latest
+    - name: Install TFLint
+      run: |
+        curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
 
-    - name: Show version
+    - name: Show tflint version
       run: tflint --version
 
-    - name: Run tflint
-      run: tflint --init && tflint
+    - name: Init tflint
+      run: tflint --init 
 
-
-# TODO: Aggiungere linting per ansible e helm
+    - name: Run TFLint
+      run: tflint
