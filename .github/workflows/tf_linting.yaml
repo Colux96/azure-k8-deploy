@@ -24,6 +24,8 @@ jobs:
 
     - name: Init tflint
       run: tflint --init 
+      working-directory: terraform
 
     - name: Run TFLint
-      run: tflint
+      run:  tflint 
+      working-directory: terraform
