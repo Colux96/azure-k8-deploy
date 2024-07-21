@@ -1,0 +1,30 @@
+name: "Terraform Linting"
+on:
+  push:
+    branches:  
+      - main
+permissions:
+  contents: read
+jobs:
+  terraform-lint:
+    name: 'Terraform Lint'
+    runs-on: ubuntu-latest
+
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - uses: terraform-linters/setup-tflint@v3
+      name: Setup TFLint
+      with:
+        tflint_version: latest
+
+    - name: Show version
+      run: tflint --version
+
+    - name: Run tflint
+      run: tflint --init && tflint
+
+
+# TODO: Aggiungere linting per ansible e helm
