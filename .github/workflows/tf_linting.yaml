@@ -19,6 +19,16 @@ jobs:
       run: |
         curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
 
+    - name: Install Terraform
+      run: |
+        sudo apt-get update && sudo apt-get install -y gnupg software-properties-common curl
+        curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+        sudo apt-add-repository -y "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+        sudo apt-get update && sudo apt-get install -y terraform
+
+    - name: Show Terraform version
+      run: terraform --version
+
     - name: Show tflint version
       run: tflint --version
 
@@ -29,3 +39,12 @@ jobs:
     - name: Run TFLint
       run:  tflint 
       working-directory: terraform
+
+    - name: Terraform Init
+      run: terraform init
+      working-directory: terraform
+
+    - name: Terraform Validate
+      run: terraform validate
+      working-directory: terraform
+      
