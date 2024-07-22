@@ -1,0 +1,15 @@
+- hosts: all
+  become: true
+  roles:
+    - docker
+    - k8-components
+
+- hosts: master
+  become: true
+  roles:
+    - k8-master
+
+- hosts: worker
+  become: true
+  roles:
+    - k8-worker

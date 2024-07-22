@@ -1,0 +1,25 @@
+---
+- name: Save join command to file
+  shell: kubeadm token create --print-join-command > /tmp/kubeadm_join_cmd.sh
+  args:
+    creates: /tmp/kubeadm_join_cmd.sh
+  run_once: true
+
+- name: Fetch join command
+  fetch:
+    src: /tmp/kubeadm_join_cmd.sh
+    dest: /tmp/kubeadm_join_cmd.sh
+    flat: true
+
+- name: Read join command
+  set_fact:
+    kubeadm_join_cmd: "{{ lookup('file', '/tmp/kubeadm_join_cmd.sh') }}"
+  run_once: true
+
+- name: Debug join command
+  debug:
+    msg: "{{ kubeadm_join_cmd }}"
+  run_once: true
+
+- name: Join workers to the cluster
+  command: "{{ kubeadm_join_cmd }}"
