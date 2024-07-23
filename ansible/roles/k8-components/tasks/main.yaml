@@ -1,12 +1,18 @@
----
 - name: Download Kubernetes GPG key
-  apt_key:
-    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
-    state: present
+  get_url:
+    url: https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_version }}/deb/Release.key
+    dest: /tmp/kubernetes-release.key
 
-- name: Add Kubernetes apt repository
+- name: Convert Kubernetes GPG key to keyring format
+  shell: |
+    if [ ! -f /etc/apt/keyrings/kubernetes-apt-keyring.gpg ]; then
+      gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg /tmp/kubernetes-release.key
+    fi
+  changed_when: false
+
+- name: Add Kubernetes APT repository
   apt_repository:
-    repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_version }}/deb/ /"
     state: present
 
 - name: Install Kubernetes components
@@ -23,3 +29,19 @@
     name: kubelet
     state: started
     enabled: true
+
+- name: Check if swap is enabled
+  command: swapon --summary
+  register: swap_status
+  changed_when: false
+
+- name: Disable swap if enabled
+  command: swapoff -a
+  when: swap_status.stdout_lines | length > 0
+  changed_when: swap_status.stdout_lines | length > 0
+
+- name: Disable SWAP in fstab
+  replace:
+    path: /etc/fstab
+    regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+    replace: '# \1'
