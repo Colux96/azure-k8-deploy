@@ -4,12 +4,12 @@
     - docker
     - k8-components
 
-- hosts: master
+- hosts: masters
   become: true
   roles:
     - k8-master
 
-- hosts: worker
+- hosts: workers
   become: true
   roles:
     - k8-worker
