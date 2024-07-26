@@ -1,15 +1,18 @@
-- hosts: all
+---
+- name: Configure Kubernetes Master
+  hosts: master_nodes
   become: true
   roles:
-    - docker
-    - k8-components
+    - kubernetes_master
 
-- hosts: masters
+- name: Configure Kubernetes Network
+  hosts: master_nodes
   become: true
   roles:
-    - k8-master
+    - kubernetes_network
 
-- hosts: workers
+- name: Configure Kubernetes Worker
+  hosts: worker_nodes
   become: true
   roles:
-    - k8-worker
+    - kubernetes_worker
