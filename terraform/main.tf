@@ -32,4 +32,9 @@ module "vm" {
   vm_admin_password     = var.vm_admin_password 
 }
 
-#TODO: Aggiungere modulo per la creazione del cluster kubernetes
+
+#Configura il namespace richiesto e crea il job di benchmark utilizzando kube-bench
+module "benchmark" {
+  source              = "./modules/network"
+  namespace_name      = var.namespace_name
+}

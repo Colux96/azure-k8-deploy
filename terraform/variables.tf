@@ -81,3 +81,9 @@ variable "worker_count" {
   type        = number
   default     = 2
 }
+
+variable "namespace_name" {
+  description = "Nome del namespace da creare sul cluster"
+  type        = string
+  default     = "namespace_test"
+}
