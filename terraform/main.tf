@@ -35,6 +35,6 @@ module "vm" {
 
 #Configura il namespace richiesto e crea il job di benchmark utilizzando kube-bench
 module "benchmark" {
-  source              = "./modules/network"
+  source              = "./modules/benchmark"
   namespace_name      = var.namespace_name
 }

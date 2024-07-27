@@ -48,12 +48,12 @@ variable "vm_name" {
 }
 
 variable "vm_admin_user" {
-  description = "Username della VM."
+  description = "Username della VM"
   type        = string
 }
 
 variable "vm_admin_password" {
-  description = "Password dell'utente VM."
+  description = "Password dell'utente VM"
   type        = string
   sensitive   = true
 }
