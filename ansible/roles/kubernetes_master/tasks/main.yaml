@@ -1,202 +1,22 @@
----
-# tasks file for kubernetes_master
-- name: Install required packages
-  apt:
-    name:
-      - curl
-      - gnupg2
-      - software-properties-common
-      - apt-transport-https
-      - ca-certificates
-    state: present
-    update_cache: true
-
-- name: Install Docker
-  apt:
-    name: docker.io
-    state: present
-    update_cache: true
-
-- name: Ensure Docker is started and enabled
-  systemd:
-    name: docker
-    state: started
-    enabled: true
-
-- name: Ensure /etc/apt/keyrings directory exists
-  file:
-    path: /etc/apt/keyrings
-    state: directory
-    mode: '0755'
-
-- name: Remove Existing Kubernetes Directory (if it exists)
-  ansible.builtin.shell: rm -rf /etc/apt/sources.list.d/pkgs_k8s_io_core_stable_v{{ kubernetes_version }}_deb.list
-
-- name: Check if swap is enabled
-  command: swapon --summary
-  register: swap_status
-  changed_when: false
-
-- name: Disable swap if enabled
-  command: swapoff -a
-  when: swap_status.stdout_lines | length > 0
-  changed_when: swap_status.stdout_lines | length > 0
-
-- name: Disable SWAP in fstab
-  replace:
-    path: /etc/fstab
-    regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
-    replace: '# \1'
-
-- name: Add kernel modules for Containerd
-  ansible.builtin.copy:
-    dest: /etc/modules-load.d/containerd.conf
-    content: |
-      overlay
-      br_netfilter
-
-- name: Load kernel modules for Containerd
-  ansible.builtin.shell:
-    cmd: modprobe overlay && modprobe br_netfilter
-
-- name: Add kernel parameters for Kubernetes
-  ansible.builtin.copy:
-    dest: /etc/sysctl.d/kubernetes.conf
-    content: |
-      net.bridge.bridge-nf-call-ip6tables = 1
-      net.bridge.bridge-nf-call-iptables = 1
-      net.ipv4.ip_forward = 1
-
-- name: Load kernel parameter changes
-  ansible.builtin.command:
-    cmd: sysctl --system
-
-- name: Configuring Containerd (building the configuration file)
-  ansible.builtin.command:
-    cmd: sh -c "containerd config default > /opt/containerd/config.toml"
-
-- name: Configuring Containerd (Setting SystemdCgroup Variable to True)
-  ansible.builtin.command:
-    cmd: sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /opt/containerd/config.toml
-
 - name: Reload systemd configuration
-  ansible.builtin.command:
-    cmd: systemctl daemon-reload
-
-- name: Restart containerd service
-  ansible.builtin.service:
-    name: containerd
-    state: restarted
-
-- name: Ensure UFW is started
-  ansible.builtin.systemd:
-    name: ufw
-    state: started
-    enabled: yes
-
-- name: Enable the firewall
-  ansible.builtin.ufw:
-    state: enabled
-
-- name: Allow 6443/tcp through firewall
-  ansible.builtin.command:
-    cmd: ufw allow 6443/tcp
-
-- name: Allow 2379:2380/tcp through firewall
-  ansible.builtin.command:
-    cmd: ufw allow 2379:2380/tcp
-
-- name: Allow 22/tcp through firewall
-  ansible.builtin.command:
-    cmd: ufw allow 22/tcp
-
-- name: Allow 8080/tcp through firewall
-  ansible.builtin.command:
-    cmd: ufw allow 8080/tcp
-
-- name: Allow 10250/tcp through firewall
-  ansible.builtin.command:
-    cmd: ufw allow 10250/tcp
-
-- name: Allow 10251/tcp through firewall
-  ansible.builtin.command:
-    cmd: ufw allow 10251/tcp
-
-- name: Allow 10252/tcp through firewall
-  ansible.builtin.command:
-    cmd: ufw allow 10252/tcp
-
-- name: Allow 10255/tcp through firewall
-  ansible.builtin.command:
-    cmd: ufw allow 10255/tcp
-
-- name: Allow 30080/tcp through firewall
-  ansible.builtin.command:
-    cmd: ufw allow 30080/tcp
-
-- name: Allow 30880/tcp through firewall
-  ansible.builtin.command:
-    cmd: ufw allow 38080/tcp
-
-- name: Download Kubernetes GPG key
-  get_url:
-    url: https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_version }}/deb/Release.key
-    dest: /tmp/kubernetes-release.key
-
-- name: Convert Kubernetes GPG key to keyring format
-  shell: |
-    if [ ! -f /etc/apt/keyrings/kubernetes-apt-keyring.gpg ]; then
-      gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg /tmp/kubernetes-release.key
-    fi
-  changed_when: false
-
-- name: Add Kubernetes APT repository
-  apt_repository:
-    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_version }}/deb/ /"
-    state: present
-
-- name: Install Kubernetes components
-  apt:
-    name:
-      - kubelet
-      - kubeadm
-      - kubectl
-    state: present
-    update_cache: true
-
-- name: Hold kubelet, kubeadm, kubectl packages
-  ansible.builtin.command:
-    cmd: apt-mark hold kubelet kubeadm kubectl
-
-- name: Ensure kubelet is started and enabled
   systemd:
-    name: kubelet
-    state: started
-    enabled: true
-
-- name: Replace /etc/default/kubelet contents
-  ansible.builtin.copy:
-    dest: /etc/default/kubelet
-    content: 'KUBELET_EXTRA_ARGS="--cgroup-driver=cgroupfs"'
-
-- name: Reload systemd configuration
-  ansible.builtin.command:
-    cmd: systemctl daemon-reload
+    daemon_reload: true
 
 - name: Restart kubelet service
-  ansible.builtin.service:
+  service:
     name: kubelet
     state: restarted
 
 - name: Update System-Wide Profile for Kubernetes
-  ansible.builtin.copy:
+  copy:
     dest: /etc/profile.d/kubernetes.sh
     content: |
       export KUBECONFIG=/etc/kubernetes/admin.conf
       export ANSIBLE_USER="sysadmin"
+    mode: '0644'
 
 - name: Replace Docker daemon.json configuration
-  ansible.builtin.copy:
+  copy:
     dest: /etc/docker/daemon.json
     content: |
       {
@@ -207,37 +27,42 @@
         },
         "storage-driver": "overlay2"
       }
+    mode: '0644'
 
 - name: Reload systemd configuration
-  ansible.builtin.command:
-    cmd: systemctl daemon-reload
+  systemd:
+    daemon_reload: true
 
 - name: Restart Docker service
-  ansible.builtin.service:
+  service:
     name: docker
     state: restarted
 
-- name: Update Kubeadm Environment Variable
-  ansible.builtin.command:
-    cmd: sed -i -e '/^\[Service\]/a Environment="KUBELET_EXTRA_ARGS=--fail-swap-on=false"' /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf
+- name: Ensure Kubelet service configuration includes fail-swap-on setting
+  lineinfile:
+    path: /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf
+    insertafter: '^\[Service\]'
+    line: 'Environment="KUBELET_EXTRA_ARGS=--fail-swap-on=false"'
+  check_mode: true
 
 - name: Reload systemd configuration
-  ansible.builtin.command:
-    cmd: systemctl daemon-reload
+  systemd:
+    daemon_reload: true
 
 - name: Restart kubelet service
-  ansible.builtin.service:
+  service:
     name: kubelet
     state: restarted
 
 - name: Pull kubeadm container images
-  ansible.builtin.command:
-    cmd: kubeadm config images pull
+  command: kubeadm config images pull
+  register: pull_images_result
+  changed_when: "'Image is up to date' not in pull_images_result.stdout"
 
 - name: Initialize Kubernetes control plane
-  ansible.builtin.command:
+  command:
     cmd: kubeadm init --pod-network-cidr={{ pod_network_cidr }}
-    creates: /tmp/kubeadm_output
+    creates: /etc/kubernetes/admin.conf
   register: kubeadm_init_output
   changed_when: false
 
@@ -251,23 +76,36 @@
   fetch:
     src: /etc/kubernetes/admin.conf
     dest: /tmp/admin.conf
-    flat: yes
+    flat: true
+
+- name: Ensure local .kube directory exists
+  file:
+    path: "{{ lookup('env', 'HOME') }}/.kube"
+    state: directory
+    mode: '0644'
+  delegate_to: localhost
 
 - name: Copy kubeconfig to local controller .kube directory
   copy:
     src: /tmp/admin.conf
     dest: "{{ lookup('env', 'HOME') }}/.kube/config"
+    mode: '0644'
   delegate_to: localhost
 
 - name: Store Kubernetes initialization output to file
   copy:
     content: "{{ kubeadm_init_output.stdout }}"
     dest: /tmp/kubeadm_output
+    mode: '0644'
   delegate_to: localhost
 
 - name: Generate the Join Command
-  ansible.builtin.shell: cat /tmp/kubeadm_output | tail -n 2 | sed ':a;N;$!ba;s/\\\n\s*/ /g' > /tmp/join-command
+  shell: |
+    set -o pipefail
+    cat /tmp/kubeadm_output | tail -n 2 | sed ':a;N;$!ba;s/\\\n\s*/ /g' > /tmp/join-command
   delegate_to: localhost
+  register: join_command_output
+  changed_when: join_command_output.stdout != ""
 
 - name: Set permissions for the Join Executable
   file:

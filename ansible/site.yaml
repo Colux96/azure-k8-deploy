@@ -1,4 +1,10 @@
 ---
+- name: Prepare Kubernetes cluster
+  hosts: all
+  become: true
+  roles:
+    - kubernetes_node
+
 - name: Configure Kubernetes Master
   hosts: master_nodes
   become: true
@@ -7,7 +13,6 @@
 
 - name: Configure Kubernetes Network
   hosts: master_nodes
-  become: true
   roles:
     - kubernetes_network
 
