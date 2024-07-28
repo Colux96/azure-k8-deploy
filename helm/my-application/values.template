@@ -19,8 +19,8 @@ mysql:
   service:
     type: ClusterIp
     port: 3306
-  password: "MY$qL2024!@?_K8"
-  user: "root"
+  password: "PLACEHOLDER_PASSWORD"
+  user: "PLACEHOLDER_USER"
 
 phpmyadmin:
   image:

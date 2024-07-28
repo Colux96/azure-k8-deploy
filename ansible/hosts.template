@@ -1,0 +1,9 @@
+[master_nodes]
+master ansible_host=PLACEHOLDER_IP ansible_user=PLACEHOLDER_USER ansible_ssh_pass=PLACEHOLDER_PASSWORD
+
+[worker_nodes]
+worker1 ansible_host=PLACEHOLDER_IP ansible_user=PLACEHOLDER_USER ansible_ssh_pass=PLACEHOLDER_PASSWORD
+worker2 ansible_host=PLACEHOLDER_IP ansible_user=PLACEHOLDER_USER ansible_ssh_pass=PLACEHOLDER_PASSWORD
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3

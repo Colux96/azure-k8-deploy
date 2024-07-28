@@ -12,7 +12,6 @@
     dest: /etc/profile.d/kubernetes.sh
     content: |
       export KUBECONFIG=/etc/kubernetes/admin.conf
-      export ANSIBLE_USER="sysadmin"
     mode: '0644'
 
 - name: Replace Docker daemon.json configuration

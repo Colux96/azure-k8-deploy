@@ -85,5 +85,5 @@ variable "worker_count" {
 variable "namespace_name" {
   description = "Nome del namespace da creare sul cluster"
   type        = string
-  default     = "namespace_test"
+  default     = "kiratech-test"
 }
