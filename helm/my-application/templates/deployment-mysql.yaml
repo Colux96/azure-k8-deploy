@@ -19,7 +19,7 @@ spec:
             - containerPort: {{ .Values.mysql.service.port }}
           env:
             - name: MYSQL_ROOT_PASSWORD
-              value: "{{ .Values.mysql.rootPassword }}"
+              value: "{{ .Values.mysql.password }}"
           volumeMounts:
             - name: mysql-storage
               mountPath: /var/lib/mysql
@@ -58,8 +58,8 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: /mnt/data/mysql  # Percorso sul nodo dove sarà montato il volume
-  storageClassName: "standard"  # Deve corrispondere alla storage class del PVC
+    path: /mnt/data/mysql
+  storageClassName: "standard"
 
 ---
 apiVersion: v1
@@ -72,4 +72,4 @@ spec:
   resources:
     requests:
       storage: 10Gi
-  storageClassName: "standard"  # Assicurati che questa storage class esista nel tuo cluster
+  storageClassName: "standard"

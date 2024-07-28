@@ -21,11 +21,11 @@ spec:
             - name: PMA_HOST
               value: mysql
             - name: PMA_PORT
-              value: "3306"
+              value: "{{ .Values.mysql.service.port }}"
             - name: PMA_USER
-              value: "root"
+              value: "{{ .Values.mysql.user }}"
             - name: PMA_PASSWORD
-              value: "mysql"
+              value: "{{ .Values.mysql.password }}"
 ---
 apiVersion: v1
 kind: Service
@@ -40,4 +40,3 @@ spec:
       targetPort: {{ .Values.phpmyadmin.service.targetPort }}
       nodePort: {{ .Values.phpmyadmin.service.nodePort }}
   type: {{ .Values.phpmyadmin.service.type }}
-
