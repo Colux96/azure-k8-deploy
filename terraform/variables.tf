@@ -49,7 +49,7 @@ variable "vm_admin_password" {
 variable "vm_size" {
   description = "Tipo di VM da creare"
   type        = string
-  default     = "Standard_B1s"
+  default     = "Standard_B2s"
 }
 
 variable "vm_total_count" {

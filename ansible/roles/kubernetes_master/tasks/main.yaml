@@ -81,7 +81,7 @@
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/.kube"
     state: directory
-    mode: '0644'
+    mode: '0755'
   delegate_to: localhost
 
 - name: Copy kubeconfig to local controller .kube directory

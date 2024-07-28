@@ -1,0 +1,9 @@
+[master_nodes]
+master ansible_host=23.97.131.168 ansible_user=simone ansible_ssh_pass=@simo1018101810!
+
+[worker_nodes]
+worker1 ansible_host=23.97.131.173 ansible_user=simone ansible_ssh_pass=@simo1018101810!
+worker2 ansible_host=23.97.131.65 ansible_user=simone ansible_ssh_pass=@simo1018101810!
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3

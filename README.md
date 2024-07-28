@@ -1,6 +1,7 @@
 ## Panoramica
 
-Il seguente progetto ha lo scopo di eseguire il provisioning di un cluster Kubernetes composto da un manager e due workers e deployare una applicazione composta da almeno tre servizi e che presenti una interfaccia grafica accessibile via browser.
+Il seguente progetto ha lo scopo di eseguire il provisioning di un cluster Kubernetes composto da un manager e due workers su Azure e deployare una applicazione composta da tre servizi (mysql, nginx,phpmyadmin) che presenti una interfaccia grafica accessibile via browser.
+Per svolgere il compito, si utilizzeranno principalmente: Terraform, Ansible e Helm.
 
 ## Prerequisiti
 
@@ -9,6 +10,7 @@ Il seguente progetto ha lo scopo di eseguire il provisioning di un cluster Kuber
 - [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli)
 - [Terraform](https://www.terraform.io/downloads.html)
 - [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)
+- [SSHPass](https://gist.github.com/arunoda/7790979) per accedere sulle macchine con autenticazioni di tipo username e password
 - [Helm](https://helm.sh/docs/intro/install/)
 - [Git](https://git-scm.com/download/linux)
 - Un repository su [GitHub](https://github.com/) per il versionamento del codice
@@ -68,6 +70,13 @@ Ora si è pronti per il provisioning di risorse su Azure.
     terraform apply -target=module.network -target=module.vm
     ```
 
+Nota: per una gestione facilitata delle spese su Azure, è altamente consigliata l'installazione del plugin [infracost](https://github.com/infracost/infracost).
+
+Una volta eseguita la semplice configurazione, si potranno sapere i costi del provisioning Terraform prima di effettuarli con il seguente comando.
+    
+    infracost breakdown --path <TERRAFORM DIRECTORY>
+
+
 ### 2. Configurazione delle VM con Ansible
 Procedere con Ansible alla configurazione del cluster sulle macchine virtuali appena create.
 
@@ -113,56 +122,34 @@ Eseguire il seguente comando per Applicare la configurazione del namespace e del
 
 ### 4. Deployment dell'Applicazione con Helm
 
-- **Edita il file `helm/values_template.yaml` configurando le porte desiderate e le credenziali per il servizio di mysql. Fatto ciò rinomina il file in i `values.yaml`**:
-    ```sh
-      user: "PLACEHOLDER_USER"
+Configurato il cluster, si può procedere al deploy dell'applicazione con Helm. Per fare ciò, editare il file `helm/values_template.yaml` configurando le porte desiderate e le credenziali per il servizio di mysql. Fatto ciò rinominare il file in `values.yaml`:
+
+      user "PLACEHOLDER_USER"
       password: "PLACEHOLDER_PASSWORD"
-    ```
-### 5. Configurazione della Continuous Integration
 
-#### Motivazione
-La Continuous Integration è implementata tramite Github actions per garantire che il codice venga verificato automaticamente ad ogni commit.
 
-- **Configura GitHub Actions nel repository**:
-    ```yaml
-    name: CI
+Eseguire il comando per il deploy dell'applicazione sul cluster kubernetes nel namespace `kiratech-test`:
+    
+    cd helm
+    helm install myapp ./myapp -n kiratech-test
 
-    on: [push]
 
-    jobs:
-      terraform:
-        runs-on: ubuntu-latest
-        steps:
-        - uses: actions/checkout@v2
-        - name: Set up Terraform
-          uses: hashicorp/setup-terraform@v1
-          with:
-            terraform_version: 1.0.11
-        - name: Terraform Init
-          run: terraform init
-        - name: Terraform Plan
-          run: terraform plan
+Per mostrare la lista dei deploy gestiti da helm, a conferma del deploy:
 
-      ansible:
-        runs-on: ubuntu-latest
-        steps:
-        - uses: actions/checkout@v2
-        - name: Set up Ansible
-          run: sudo apt-get install ansible
-        - name: Run Ansible Playbook
-          run: ansible-playbook -i inventory setup.yaml
+    helm list
 
-      helm:
-        runs-on: ubuntu-latest
-        steps:
-        - uses: actions/checkout@v2
-        - name: Set up Helm
-          run: curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-        - name: Deploy Helm Chart
-          run: helm install myapp ./myapp -n kiratech-test
-    ```
+Per deployare un aggiornamento dell'applicazione sul cluster, a seguito di cambi nella chart di helm:
+    
+    helm upgrade my-application ./my-application -n kiratech-test --values ./my-application/values.yaml
 
-### Versionamento del Codice
+
+### 5. Continuous Integration
+
+La Continuous Integration (CI) è stata implementata tramite Github actions per garantire che il codice venga verificato automaticamente ad ogni commit. 
+Il codice che si occupa del linting di codice helm, terraform e ansible è visibile nella cartella ```.github```.
+
+
+### 6. Versionamento del Codice
 Versionare il codice su Github in modo da agevolare il team work, tornare facilmente a versioni precedenti o abbracciare filosofie GitOps.
 
 -  **Inizializza un repository Git**:
@@ -189,6 +176,7 @@ Versionare il codice su Github in modo da agevolare il team work, tornare facilm
 
 ## Note
 
+- Per migliorare la sicurezza del progetto, sarebbe opportuno utilizzare le chiavi SSH al posto di utente e password per la configurazione delle macchine tramite Ansible 
 - Sarebbe opportuno l'integrazione di una componente CD per il deploy automatico dell'applicazione a ogni commit
 - Per migliorare il progetto sarebbe opportuno l'implementazione di un inventory Ansible dinamico che preleva automaticamente le informazioni necessarie da Terraform
 - Monitorare costantemente l'utilizzo delle risorse per non superare i limiti dell'account gratuito di Azure.
