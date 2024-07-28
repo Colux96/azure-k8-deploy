@@ -1,3 +1,7 @@
+terraform {
+  required_version = ">= 1.9.2"
+}
+
 #Crea un gruppo di risorse
 resource "azurerm_resource_group" "rg" {
   name     = var.resource_group_name

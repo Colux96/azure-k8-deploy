@@ -23,12 +23,6 @@ variable "snet_name" {
   default     = "snet_azure_k8"
 }
 
-variable "pIP_name" {
-  description = "Nome IP Publico"
-  type        = string
-  default     = "pubIP_azure_k8"
-}
-
 variable "nsg_name" {
   description = "Nome del Network Security Group"
   type        = string
