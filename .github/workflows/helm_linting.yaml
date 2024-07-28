@@ -19,5 +19,5 @@ jobs:
     
     - name: Lint Helm charts
       run: |
-        helm lint ./my-application  --values ./values_template.yaml
+        helm lint ./my-application  --values ./my-application/values_template.yaml
       working-directory: helm 
