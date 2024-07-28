@@ -1,21 +1,21 @@
 - name: Reload systemd configuration
-  systemd:
+  ansible.builtin.systemd:
     daemon_reload: true
 
 - name: Restart kubelet service
-  service:
+  ansible.builtin.service:
     name: kubelet
     state: restarted
 
 - name: Update System-Wide Profile for Kubernetes
-  copy:
+  ansible.builtin.copy:
     dest: /etc/profile.d/kubernetes.sh
     content: |
       export KUBECONFIG=/etc/kubernetes/admin.conf
     mode: '0644'
 
 - name: Replace Docker daemon.json configuration
-  copy:
+  ansible.builtin.copy:
     dest: /etc/docker/daemon.json
     content: |
       {
@@ -29,77 +29,77 @@
     mode: '0644'
 
 - name: Reload systemd configuration
-  systemd:
+  ansible.builtin.systemd:
     daemon_reload: true
 
 - name: Restart Docker service
-  service:
+  ansible.builtin.service:
     name: docker
     state: restarted
 
 - name: Ensure Kubelet service configuration includes fail-swap-on setting
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf
     insertafter: '^\[Service\]'
     line: 'Environment="KUBELET_EXTRA_ARGS=--fail-swap-on=false"'
   check_mode: true
 
 - name: Reload systemd configuration
-  systemd:
+  ansible.builtin.systemd:
     daemon_reload: true
 
 - name: Restart kubelet service
-  service:
+  ansible.builtin.service:
     name: kubelet
     state: restarted
 
 - name: Pull kubeadm container images
-  command: kubeadm config images pull
+  ansible.builtin.command: kubeadm config images pull
   register: pull_images_result
   changed_when: "'Image is up to date' not in pull_images_result.stdout"
 
 - name: Initialize Kubernetes control plane
-  command:
+  ansible.builtin.command:
     cmd: kubeadm init --pod-network-cidr={{ pod_network_cidr }}
     creates: /etc/kubernetes/admin.conf
   register: kubeadm_init_output
   changed_when: false
 
 - name: Set permissions for Kubernetes Admin
-  file:
+  ansible.builtin.file:
     path: /etc/kubernetes/admin.conf
     state: file
     mode: '0755'
 
 - name: Fetch kubeconfig from master node
-  fetch:
+  ansible.builtin.fetch:
     src: /etc/kubernetes/admin.conf
     dest: /tmp/admin.conf
     flat: true
 
 - name: Ensure local .kube directory exists
-  file:
+  ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/.kube"
     state: directory
     mode: '0644'
   delegate_to: localhost
 
 - name: Copy kubeconfig to local controller .kube directory
-  copy:
+  ansible.builtin.copy:
     src: /tmp/admin.conf
     dest: "{{ lookup('env', 'HOME') }}/.kube/config"
     mode: '0644'
   delegate_to: localhost
 
 - name: Store Kubernetes initialization output to file
-  copy:
+  ansible.builtin.copy:
     content: "{{ kubeadm_init_output.stdout }}"
     dest: /tmp/kubeadm_output
     mode: '0644'
   delegate_to: localhost
 
 - name: Generate the Join Command
-  shell: |
+  ansible.builtin.shell: |
     set -o pipefail
     cat /tmp/kubeadm_output | tail -n 2 | sed ':a;N;$!ba;s/\\\n\s*/ /g' > /tmp/join-command
   delegate_to: localhost
@@ -107,7 +107,7 @@
   changed_when: join_command_output.stdout != ""
 
 - name: Set permissions for the Join Executable
-  file:
+  ansible.builtin.file:
     path: /tmp/join-command
     state: file
     mode: '0755'

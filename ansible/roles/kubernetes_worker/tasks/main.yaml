@@ -1,12 +1,12 @@
 # tasks file for kubernetes_worker
 - name: Copy join-command file to worker nodes
-  copy:
+  ansible.builtin.copy:
     src: /tmp/join-command
     dest: /tmp/join-command
-    mode: 0755
+    mode: '0755'
 
 - name: Join Worker Nodes
-  command:
+  ansible.builtin.command:
     cmd: sh /tmp/join-command
   args:
     creates: /var/lib/kubelet/kubelet.conf

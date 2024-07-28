@@ -1,7 +1,7 @@
 ---
 # tasks file for kubernetes_node
 - name: Install required packages
-  apt:
+  ansible.builtin.apt:
     name:
       - curl
       - gnupg2
@@ -12,46 +12,46 @@
     update_cache: true
 
 - name: Install Docker
-  apt:
+  ansible.builtin.apt:
     name: docker.io
     state: present
     update_cache: true
 
 - name: Ensure Docker is started and enabled
-  systemd:
+  ansible.builtin.systemd:
     name: docker
     state: started
     enabled: true
 
 - name: Ensure /etc/apt/keyrings directory exists
-  file:
+  ansible.builtin.file:
     path: /etc/apt/keyrings
     state: directory
     mode: '0755'
 
 - name: Remove Existing Kubernetes Directory (if it exists)
-  file:
+  ansible.builtin.file:
     path: /etc/apt/sources.list.d/pkgs_k8s_io_core_stable_v{{ kubernetes_version }}_deb.list
     state: absent
 
 - name: Check if swap is enabled
-  command: swapon --summary
+  ansible.builtin.command: swapon --summary
   register: swap_status
   changed_when: false
 
 - name: Disable swap if enabled
-  command: swapoff -a
+  ansible.builtin.command: swapoff -a
   when: swap_status.stdout_lines | length > 0
   changed_when: swap_status.stdout_lines | length > 0
 
 - name: Disable SWAP in fstab
-  replace:
+  ansible.builtin.replace:
     path: /etc/fstab
     regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
     replace: '# \1'
 
 - name: Add kernel modules for Containerd
-  copy:
+  ansible.builtin.copy:
     dest: /etc/modules-load.d/containerd.conf
     content: |
       overlay
@@ -59,14 +59,14 @@
     mode: '0644'
 
 - name: Load kernel modules for Containerd
-  modprobe:
+  community.general.modprobe:
     name: "{{ item }}"
   loop:
     - overlay
     - br_netfilter
 
 - name: Add kernel parameters for Kubernetes
-  copy:
+  ansible.builtin.copy:
     dest: /etc/sysctl.d/kubernetes.conf
     content: |
       net.bridge.bridge-nf-call-ip6tables = 1
@@ -77,13 +77,13 @@
     - Reload sysctl
 
 - name: Configuring Containerd (building the configuration file)
-  command:
+  ansible.builtin.command:
     cmd: sh -c "containerd config default > /opt/containerd/config.toml"
   args:
     creates: /opt/containerd/config.toml
 
 - name: Configuring Containerd (Setting SystemdCgroup Variable to True)
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /opt/containerd/config.toml
     regexp: '^SystemdCgroup = false'
     line: 'SystemdCgroup = true'
@@ -91,17 +91,17 @@
     - Restart containerd service
 
 - name: Ensure UFW is started and enabled
-  systemd:
+  ansible.builtin.systemd:
     name: ufw
     state: started
     enabled: true
 
 - name: Enable the firewall
-  ufw:
+  community.general.ufw:
     state: enabled
 
 - name: Allow required ports through firewall
-  ufw:
+  community.general.ufw:
     rule: allow
     port: "{{ item.port }}"
     proto: "{{ item.proto }}"
@@ -120,23 +120,24 @@
     - {port: 30880, proto: tcp}
 
 - name: Download Kubernetes GPG key
-  get_url:
+  ansible.builtin.get_url:
     url: https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_version }}/deb/Release.key
     dest: /tmp/kubernetes-release.key
+    mode: '0644'
 
 - name: Convert Kubernetes GPG key to keyring format
-  command:
+  ansible.builtin.command:
     cmd: >
       gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg /tmp/kubernetes-release.key
     creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
 - name: Add Kubernetes APT repository
-  apt_repository:
+  ansible.builtin.apt_repository:
     repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_version }}/deb/ /"
     state: present
 
 - name: Install Kubernetes components
-  apt:
+  ansible.builtin.apt:
     name:
       - kubelet
       - kubeadm
@@ -145,7 +146,7 @@
     update_cache: true
 
 - name: Hold kubelet, kubeadm, kubectl packages
-  command:
+  ansible.builtin.command:
     cmd: apt-mark hold "{{ item }}"
   loop:
     - kubelet
@@ -154,13 +155,13 @@
   changed_when: false
 
 - name: Ensure kubelet is started and enabled
-  systemd:
+  ansible.builtin.systemd:
     name: kubelet
     state: started
     enabled: true
 
 - name: Replace /etc/default/kubelet contents
-  copy:
+  ansible.builtin.copy:
     dest: /etc/default/kubelet
     content: 'KUBELET_EXTRA_ARGS="--cgroup-driver=cgroupfs"'
     mode: '0644'
