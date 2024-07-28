@@ -4,7 +4,8 @@ on:
     branches:
       - main
 jobs:
-  lint:
+  helm-lint:
+    name: 'Helm Lint'
     runs-on: ubuntu-latest
     
     steps:
@@ -18,5 +19,5 @@ jobs:
     
     - name: Lint Helm charts
       run: |
-        helm lint ./my-application
+        helm lint ./my-application  --values ./values_template.yaml
       working-directory: helm 
