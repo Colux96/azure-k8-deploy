@@ -1,3 +1,2 @@
 kubernetes_version: "1.30"
-ANSIBLE_USER: "ubuntu"
 pod_network_cidr: "10.244.0.0/16"

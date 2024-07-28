@@ -1,7 +1,7 @@
 variable "resource_group_name" {
   description = "Nome del gruppo di risorse"
   type        = string
-  default     = "rg_azure_k8"
+  default     = "rg_k8s_deploy"
 }
 
 variable "location" {
@@ -27,12 +27,6 @@ variable "nsg_name" {
   description = "Nome del Network Security Group"
   type        = string
   default     = "NSG_azure_k8"
-}
-
-variable "nic_name" {
-  description = "Nome della NIC"
-  type        = string
-  default     = "master_NIC"
 }
 
 variable "vm_name" {

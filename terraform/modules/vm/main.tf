@@ -4,7 +4,7 @@
     name                  = "${var.vm_name}-master-${count.index}"
     location              = var.location
     resource_group_name   = var.resource_group_name
-    network_interface_ids = [var.network_id]
+    network_interface_ids = [var.master_nic_ids[count.index]]
     vm_size               = var.vm_size
     
     storage_os_disk {
@@ -34,12 +34,13 @@
 
 }
 
+# Crea N macchine virtuali di tipo Worker
 resource "azurerm_virtual_machine" "k8s_worker" {
   count                 = var.worker_count
   name                  = "${var.vm_name}-worker-${count.index}"
   location              = var.location
   resource_group_name   = var.resource_group_name
-  network_interface_ids = [var.network_id]
+  network_interface_ids = [var.worker_nic_ids[count.index]]
   vm_size               = var.vm_size
 
   storage_os_disk {
