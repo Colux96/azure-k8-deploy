@@ -4,4 +4,5 @@ terraform/*.tfplan
 terraform/.terraform
 terraform/.terraform.lock.*
 ansible/venv/
+ansible/hosts
 helm/my-application/values.yaml
