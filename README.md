@@ -96,7 +96,7 @@ Procedere con Ansible alla configurazione del cluster sulle macchine virtuali ap
 
 - Esegui il playbook Ansible e fornire la password per i comandi sudo quando richiesto:
     ```sh
-    ansible-playbook site.yaml -K
+    ansible-playbook -i hosts site.yaml -K
     ```
 
 ### 3. Creazione del namespace e del job di benchmark
@@ -108,6 +108,13 @@ Si è scelto di utilizzare kube-bench per il benchmark di sicurezza per i seguen
 - Standard di Riferimento: kube-bench utilizza il benchmark CIS Kubernetes come base per i suoi controlli. Il Center for Internet Security (CIS) è riconosciuto per i suoi standard di sicurezza approfonditi e consolidati, e le loro raccomandazioni sono ampiamente accettate nella comunità di sicurezza informatica.
 - Automazione e Facilità d'Uso: kube-bench è progettato per essere eseguito automaticamente sui cluster Kubernetes tramite l'uso dei job
 - Aggiornamenti Regolari: Lo strumento è mantenuto attivamente e aggiornato con le ultime best practices e raccomandazioni di sicurezza, garantendo che il benchmark rimanga rilevante e efficace.
+
+Per poter interagire con il cluster kubernetes, copiare l'IP del load balancer creato su Azure da Terraform e incollarlo sul file di configurazione `$home/.kube/config` al posto dell'IP del master
+
+- Editare il file
+  ```sh
+    server: https://<IP_PUBLICO_LOAD_BALANCER>:6443
+  ```
 
 Eseguire il seguente comando per Applicare la configurazione del namespace e del job di benchmark sul cluster Kubernetes.
 - Comando per applicare la configurazione

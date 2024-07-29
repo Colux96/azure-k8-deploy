@@ -13,6 +13,7 @@
 
 - name: Configure Kubernetes Network
   hosts: master_nodes
+  become: true
   roles:
     - kubernetes_network
 

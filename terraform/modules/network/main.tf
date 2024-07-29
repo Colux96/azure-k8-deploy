@@ -144,3 +144,85 @@ resource "azurerm_network_interface_security_group_association" "worker_isga" {
     azurerm_network_security_group.nsg
   ]
 }
+
+
+
+resource "azurerm_public_ip" "lb_public_ip" {
+  name                = "lb-public-ip"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  allocation_method   = "Dynamic" 
+  sku                 = "Basic" 
+}
+
+resource "azurerm_lb" "main_lb" {
+  name                = "main-load-balancer"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  sku                 = "Basic"
+
+  frontend_ip_configuration {
+    name                 = "frontend-ip-config"
+    public_ip_address_id = azurerm_public_ip.lb_public_ip.id
+  }
+}
+
+resource "azurerm_lb_backend_address_pool" "lb_pool" {
+  loadbalancer_id = azurerm_lb.main_lb.id
+  name            = "bck_pool"
+}
+
+resource "azurerm_lb_nat_rule" "k8_nat_rule" {
+  name                = "k8-nat-rule"
+  resource_group_name = var.resource_group_name
+  loadbalancer_id     = azurerm_lb.main_lb.id
+  frontend_ip_configuration_name = "frontend-ip-config"
+  
+  protocol = "Tcp" 
+  frontend_port_start = 6443  
+  frontend_port_end = 6443  
+  backend_port  = 6443
+  idle_timeout_in_minutes = 4
+
+  enable_floating_ip = false
+  backend_address_pool_id         = azurerm_lb_backend_address_pool.lb_pool.id
+}
+
+resource "azurerm_lb_nat_rule" "phpmyadm_nat_rule" {
+  name                = "phpmyadm-nat-rule"
+  resource_group_name = var.resource_group_name
+  loadbalancer_id     = azurerm_lb.main_lb.id
+  frontend_ip_configuration_name = "frontend-ip-config"
+  
+  protocol = "Tcp" 
+  frontend_port_start = 30880  
+  frontend_port_end = 30880  
+  backend_port  = 30880  
+  idle_timeout_in_minutes = 4
+
+  enable_floating_ip = false
+  backend_address_pool_id         = azurerm_lb_backend_address_pool.lb_pool.id
+}
+
+resource "azurerm_lb_nat_rule" "nginx_nat_rule" {
+  name                           = "nginx-nat-rule"
+  resource_group_name            = var.resource_group_name
+  loadbalancer_id                = azurerm_lb.main_lb.id
+  frontend_ip_configuration_name = "frontend-ip-config"
+  
+  protocol                      = "Tcp" 
+  frontend_port_start           = 30080  
+  frontend_port_end             = 30080  
+  backend_port                  = 30080  
+  idle_timeout_in_minutes       = 4
+
+  enable_floating_ip            = false
+   backend_address_pool_id      = azurerm_lb_backend_address_pool.lb_pool.id
+}
+
+resource "azurerm_network_interface_backend_address_pool_association" "master_backend_pool_assoc" {
+  count = var.master_count
+  network_interface_id    = azurerm_network_interface.master_nic[count.index].id
+  ip_configuration_name   = "ipconfig-master-${count.index}"
+  backend_address_pool_id = azurerm_lb_backend_address_pool.lb_pool.id
+}
